@@ -112,6 +112,18 @@ export class DiagramView extends Backbone.Model {
         });
         this.listenTo(model, 'state:dataLoaded', () => {
             this.model.resetHistory();
+            // Add all classes to view.
+            let elements:  Element[] = [];
+            model.dataProvider.classTree().then(
+                classes => {
+                    classes.forEach(cl => {
+                        let element = this.createElementAt(cl.id, {x: 0, y: 0});
+                        elements.push(element);
+                    });
+                }
+            );
+            this.model.requestElementData(elements);
+            this.model.requestLinksOfType();
         });
     }
 
