@@ -5,12 +5,15 @@ import { PaperArea } from '../diagram/paperArea';
 
 import { InstancesSearch, SearchCriteria } from '../widgets/instancesSearch';
 
+import { SearchBar } from '../widgets/searchbar';
+
 import { ResizableSidebar, DockSide } from './resizableSidebar';
 import { Accordion } from './accordion';
 import { AccordionItem } from './accordionItem';
 
 export interface Props {
     toolbar: React.ReactElement<any>;
+    searchbar: React.ReactElement<any>;
     view: DiagramView;
     isViewOnly?: boolean;
 
@@ -111,10 +114,11 @@ export class WorkspaceMarkup extends React.Component<Props, void> {
                 </Accordion>
             </ResizableSidebar>
         );
-
+        
         return (
             <div ref={e => this.element = e} className='ontodia'>
                 <div className='ontodia__header'>{this.props.toolbar}</div>
+                <div className='ontodia__searchbar'>{this.props.searchbar}</div>
                 <div className='ontodia__workspace'>
                     {!this.props.isViewOnly ? leftPanel : null}
                     <div className='ontodia__main-panel'
