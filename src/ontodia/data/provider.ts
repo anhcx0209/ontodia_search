@@ -100,6 +100,7 @@ export interface FilterParams {
      * element type filter
      */
     elementTypeId?: string;
+    
     /**
      * text search
      */

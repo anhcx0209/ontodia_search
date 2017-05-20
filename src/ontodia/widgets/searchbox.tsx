@@ -12,14 +12,14 @@ import { ListElementView } from './listElementView';
 const DirectionInImage = require<string>('../../../images/direction-in.png');
 const DirectionOutImage = require<string>('../../../images/direction-out.png');
 
-export interface InstancesSearchProps {
+export interface FullTextSearchProps {
     className?: string;
     view: DiagramView;
-    criteria: SearchCriteria;
-    onCriteriaChanged: (criteria: SearchCriteria) => void;
+    textCriteria: TextCriteria;
+    onTextCriteriaChanged: (textCriteria: TextCriteria) => void;
 }
 
-export interface SearchCriteria {
+export interface TextCriteria {
     readonly text?: string;
     readonly elementTypeId?: string;
     readonly refElementId?: string;
@@ -39,12 +39,12 @@ export interface State {
 
 const CLASS_NAME = 'ontodia-instances-search';
 
-export class InstancesSearch extends React.Component<InstancesSearchProps, State> {
+export class FullTextSearch extends React.Component<FullTextSearchProps, State> {
     private readonly listener = new Backbone.Model();
 
     private currentRequest: FilterParams;
 
-    constructor(props: InstancesSearchProps) {
+    constructor(props: FullTextSearchProps) {
         super(props);
         this.state = {
             selectedItems: {},
@@ -62,7 +62,7 @@ export class InstancesSearch extends React.Component<InstancesSearchProps, State
             this.state.items ? 'finished' : undefined;
 
         const searchTerm = this.state.inputText === undefined
-            ? this.props.criteria.text : this.state.inputText;
+            ? this.props.textCriteria.text : this.state.inputText;
 
         return <div className={className} data-state={progressState}>
             <div className='progress'>
@@ -78,7 +78,7 @@ export class InstancesSearch extends React.Component<InstancesSearchProps, State
                         value={searchTerm || ''}
                         onChange={e => this.setState({inputText: e.currentTarget.value})}
                         onKeyUp={e => {
-                            if (e.keyCode === ENTER_KEY_CODE) {
+                            if (e.keyCode === ENTER_KEY_CODE) {                               
                                this.submitCriteriaUpdate();
                             }
                         }} />
@@ -107,40 +107,40 @@ export class InstancesSearch extends React.Component<InstancesSearchProps, State
     }
 
     private renderCriteria(): React.ReactElement<any> {
-        const {criteria = {}, view} = this.props;
+        const {textCriteria = {}, view} = this.props;
         const criterions: React.ReactElement<any>[] = [];
 
-        if (criteria.elementTypeId) {
-            const classInfo = view.model.getClassesById(criteria.elementTypeId);
+        if (textCriteria.elementTypeId) {
+            const classInfo = view.model.getClassesById(textCriteria.elementTypeId);
             const classLabel = view.getLocalizedText(classInfo.label.values).text;
             criterions.push(<div key='hasType' className={`${CLASS_NAME}__criterion`}>
-                {this.renderRemoveCriterionButtons(() => this.props.onCriteriaChanged(
-                    {...this.props.criteria, elementTypeId: undefined}))}
+                {this.renderRemoveCriterionButtons(() => this.props.onTextCriteriaChanged(
+                    {...this.props.textCriteria, elementTypeId: undefined}))}
                 Has type <span className={`${CLASS_NAME}__criterion-class`}
                     title={classInfo.id}>{classLabel}</span>
             </div>);
-        } else if (criteria.refElementId) {
-            const element = view.model.getElement(criteria.refElementId);
+        } else if (textCriteria.refElementId) {
+            const element = view.model.getElement(textCriteria.refElementId);
             const template = element && element.template;
             const elementLabel = formatLabel(
-                view, criteria.refElementId, template && template.label);
+                view, textCriteria.refElementId, template && template.label);
 
-            const linkType = criteria.refElementLinkId && view.model.getLinkType(criteria.refElementLinkId);
+            const linkType = textCriteria.refElementLinkId && view.model.getLinkType(textCriteria.refElementLinkId);
             const linkTypeLabel = linkType && formatLabel(view, linkType.id, linkType.label);
 
             criterions.push(<div key='hasLinkedElement' className={`${CLASS_NAME}__criterion`}>
-                {this.renderRemoveCriterionButtons(() => this.props.onCriteriaChanged(
-                    {...this.props.criteria, refElementId: undefined, refElementLinkId: undefined}))}
+                {this.renderRemoveCriterionButtons(() => this.props.onTextCriteriaChanged(
+                    {...this.props.textCriteria, refElementId: undefined, refElementLinkId: undefined}))}
                 Connected to <span className={`${CLASS_NAME}__criterion-element`}
                     title={element && element.id}>{elementLabel}</span>
-                {criteria.refElementLinkId && <span>
+                {textCriteria.refElementLinkId && <span>
                     {' through '}
                     <span className={`${CLASS_NAME}__criterion-link-type`}
                         title={linkType && linkType.id}>{linkTypeLabel}</span>
-                    {criteria.linkDirection === 'in' && <span>
+                    {textCriteria.linkDirection === 'in' && <span>
                         {' as '}<img className={`${CLASS_NAME}__link-direction`} src={DirectionInImage} />&nbsp;source
                     </span>}
-                    {criteria.linkDirection === 'out' && <span>
+                    {textCriteria.linkDirection === 'out' && <span>
                         {' as '}<img className={`${CLASS_NAME}__link-direction`} src={DirectionOutImage} />&nbsp;target
                     </span>}
                 </span>}
@@ -186,9 +186,9 @@ export class InstancesSearch extends React.Component<InstancesSearchProps, State
     }
 
     private submitCriteriaUpdate() {
-        let text = this.state.inputText === undefined ? this.props.criteria.text : this.state.inputText;
+        let text = this.state.inputText === undefined ? this.props.textCriteria.text : this.state.inputText;
         text = text === '' ? undefined : text;
-        this.props.onCriteriaChanged({...this.props.criteria, text});
+        this.props.onTextCriteriaChanged({...this.props.textCriteria, text});
     }
 
     componentDidMount() {
@@ -205,11 +205,11 @@ export class InstancesSearch extends React.Component<InstancesSearchProps, State
         this.queryItems(false);
     }
 
-    componentWillReceiveProps(nextProps: InstancesSearchProps) {
+    componentWillReceiveProps(nextProps: FullTextSearchProps) {
         const languageChanged = this.currentRequest
             ? this.currentRequest.languageCode !== nextProps.view.getLanguage() : false;
 
-        if (this.props.criteria !== nextProps.criteria || languageChanged) {
+        if (this.props.textCriteria !== nextProps.textCriteria || languageChanged) {
             this.setState({inputText: undefined}, () => this.queryItems(false));
         }
     }
@@ -219,7 +219,8 @@ export class InstancesSearch extends React.Component<InstancesSearchProps, State
         this.currentRequest = undefined;
     }
 
-    private queryItems(loadMoreItems: boolean) {        
+    private queryItems(loadMoreItems: boolean) {
+        console.log(this.props.textCriteria);
         let request: FilterParams;
         if (loadMoreItems) {
             if (!this.currentRequest) {
@@ -228,7 +229,7 @@ export class InstancesSearch extends React.Component<InstancesSearchProps, State
             const {offset, limit} = this.currentRequest;
             request = {...this.currentRequest, offset: offset + limit};
         } else {
-            request = createRequest(this.props.criteria, this.props.view.getLanguage());
+            request = createRequest(this.props.textCriteria, this.props.view.getLanguage());            
         }
 
         if (!(request.text || request.elementTypeId || request.refElementId || request.refElementLinkId)) {
@@ -290,7 +291,7 @@ export class InstancesSearch extends React.Component<InstancesSearchProps, State
     }
 }
 
-function createRequest(criteria: SearchCriteria, language: string): FilterParams {
+function createRequest(criteria: TextCriteria, language: string): FilterParams {
     return {
         text: criteria.text,
         elementTypeId: criteria.elementTypeId,

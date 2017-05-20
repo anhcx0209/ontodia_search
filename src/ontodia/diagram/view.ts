@@ -122,8 +122,8 @@ export class DiagramView extends Backbone.Model {
                     });
                 }
             );
-            this.model.requestElementData(elements);
             this.model.requestLinksOfType();
+            this.model.requestElementData(elements);
         });
     }
 

@@ -214,8 +214,8 @@ export const OWLRDFSSettings: SparqlDataProviderSettings = {
                 }
                 OPTIONAL { ?class rdfs:label ?label.}
                 OPTIONAL {?class rdfs:subClassOf ?parent}
-            }
-        `,
+            } ORDER BY ?class
+        `,        
 
     // todo: think more, maybe add a limit here?
     linkTypesPattern: `{	?link a rdf:Property
@@ -250,6 +250,17 @@ export const OWLRDFSSettings: SparqlDataProviderSettings = {
     filterAdditionalRestriction: '',
 };
 
+const StardogSetting: Partial<SparqlDataProviderSettings> = {
+    classTreeQuery: `
+        SELECT DISTINCT ?class ?label ?parent 
+        WHERE { 
+            { ?class a owl:Class . } UNION { ?ind a ?class . } . 
+            OPTIONAL { ?class rdfs:subClassOf ?parent } . 
+            OPTIONAL { ?class rdfs:label ?label } 
+        } ORDER BY ?class
+    `,
+};
+
 const OWLStatsOverride: Partial<SparqlDataProviderSettings> = {
     classTreeQuery: `
         SELECT ?class ?instcount ?label ?parent
@@ -265,7 +276,7 @@ const OWLStatsOverride: Partial<SparqlDataProviderSettings> = {
             }
             OPTIONAL { ?class rdfs:label ?label.}
             OPTIONAL {?class rdfs:subClassOf ?parent}
-        }
+        } ORDERBY ?class
     `,
 };
 export const OWLStatsSettings: SparqlDataProviderSettings = {...OWLRDFSSettings, ...OWLStatsOverride};

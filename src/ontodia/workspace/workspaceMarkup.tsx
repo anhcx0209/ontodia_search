@@ -4,21 +4,22 @@ import { DiagramView } from '../diagram/view';
 import { PaperArea } from '../diagram/paperArea';
 
 import { InstancesSearch, SearchCriteria } from '../widgets/instancesSearch';
-
-import { SearchBar } from '../widgets/searchbar';
+import { FullTextSearch, TextCriteria } from '../widgets/searchbox';
 
 import { ResizableSidebar, DockSide } from './resizableSidebar';
 import { Accordion } from './accordion';
 import { AccordionItem } from './accordionItem';
 
 export interface Props {
-    toolbar: React.ReactElement<any>;
-    searchbar: React.ReactElement<any>;
+    toolbar: React.ReactElement<any>;    
     view: DiagramView;
     isViewOnly?: boolean;
 
     searchCriteria?: SearchCriteria;
+    textCriteria?: TextCriteria;
+
     onSearchCriteriaChanged: (criteria: SearchCriteria) => void;
+    onTextCriteriaChanged: (textCriteria: TextCriteria) => void;    
 }
 
 const INTRO_CLASSES = `<p>Navigate through class tree and click a class to select it.</p>
@@ -43,6 +44,8 @@ const INTRO_CONNECTIONS = `<p>Connections panel lists all the connection present
  them or without it.</p>`;
 
 const INTRO_RESIZE = `<p>Panels can be resized and collapsed.</p>`;
+
+const INTRO_TEXTSEARCH = `<p>Full-text search</p>`;
 
 export class WorkspaceMarkup extends React.Component<Props, void> {
     element: HTMLElement;
@@ -102,7 +105,7 @@ export class WorkspaceMarkup extends React.Component<Props, void> {
                     preventTextSelection: true,
                     verticalResizing: true,
                 })}>
-                    <AccordionItem heading='Connections'
+                    {/*<AccordionItem heading='Connections'
                         bodyClassName='link-types-toolbox' bodyRef={e => this.linkTypesPanel = e}
                         tutorialProps={{
                             'data-position': 'left',
@@ -110,6 +113,17 @@ export class WorkspaceMarkup extends React.Component<Props, void> {
                             'data-intro-id': 'link-types-toolbox',
                             'data-intro': INTRO_CONNECTIONS,
                         }}>
+                    </AccordionItem>*/}
+                    <AccordionItem heading='Full-text search'
+                        tutorialProps={{
+                            'data-position': 'left',
+                            'data-step': '5',
+                            'data-intro-id': 'filter-view',
+                            'data-intro': INTRO_TEXTSEARCH,
+                        }}>
+                        <FullTextSearch view={this.props.view}
+                            textCriteria={this.props.textCriteria || {}}
+                            onTextCriteriaChanged={this.props.onTextCriteriaChanged} />
                     </AccordionItem>
                 </Accordion>
             </ResizableSidebar>
@@ -117,10 +131,9 @@ export class WorkspaceMarkup extends React.Component<Props, void> {
         
         return (
             <div ref={e => this.element = e} className='ontodia'>
-                <div className='ontodia__header'>{this.props.toolbar}</div>
-                <div className='ontodia__searchbar'>{this.props.searchbar}</div>
+                <div className='ontodia__header'>{this.props.toolbar}</div>                
                 <div className='ontodia__workspace'>
-                    {!this.props.isViewOnly ? leftPanel : null}
+                    {/*{!this.props.isViewOnly ? leftPanel : null}*/}
                     <div className='ontodia__main-panel'
                          data-position='left' data-step='3' data-intro-id='diagram-area' data-intro={INTRO_DIAGRAM}>
                         <PaperArea ref={el => this.paperArea = el}

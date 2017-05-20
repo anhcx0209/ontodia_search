@@ -13,9 +13,10 @@ import { LinkTypesToolboxShell, LinkTypesToolboxModel } from '../widgets/linksTo
 import { dataURLToBlob } from '../viewUtils/toSvg';
 
 import { EditorToolbar, Props as EditorToolbarProps } from '../widgets/toolbar';
-import { SearchBar, Props as SearchBarProps } from '../widgets/searchbar';
 
 import { SearchCriteria } from '../widgets/instancesSearch';
+import { TextCriteria } from '../widgets/searchbox';
+
 import { showTutorial, showTutorialIfNotSeen } from '../tutorial/tutorial';
 
 import { WorkspaceMarkup, Props as MarkupProps } from './workspaceMarkup';
@@ -32,6 +33,7 @@ export interface Props {
 
 export interface State {
     readonly criteria?: SearchCriteria;
+    readonly textCriteria?: TextCriteria;
 }
 
 export class Workspace extends Component<Props, State> {
@@ -59,28 +61,9 @@ export class Workspace extends Component<Props, State> {
             isViewOnly: this.props.isViewOnly,
             view: this.diagram,
             searchCriteria: this.state.criteria,
+            textCriteria: this.state.textCriteria,
             onSearchCriteriaChanged: criteria => this.setState({criteria}),
-            searchbar: createElement<SearchBarProps>(SearchBar, {
-                onUndo: this.undo,
-                onRedo: this.redo,
-                onZoomIn: this.zoomIn,
-                onZoomOut: this.zoomOut,
-                onZoomToFit: this.zoomToFit,
-                onPrint: this.print,
-                onExportSVG: this.exportSvg,
-                onExportPNG: this.exportPng,
-                onShare: this.props.onShareDiagram ? () => this.props.onShareDiagram(this) : undefined,
-                onSaveDiagram: () => this.props.onSaveDiagram(this),
-                onForceLayout: () => {
-                    this.forceLayout();
-                    this.zoomToFit();
-                },
-                onChangeLanguage: this.changeLanguage,
-                onShowTutorial: showTutorial,
-                onEditAtMainSite: () => this.props.onEditAtMainSite(this),
-                isEmbeddedMode: this.props.isViewOnly,
-                isDiagramSaved: this.props.isDiagramSaved,
-            }),
+            onTextCriteriaChanged: textCriteria => this.setState({textCriteria}),            
             toolbar: createElement<EditorToolbarProps>(EditorToolbar, {
                 onUndo: this.undo,
                 onRedo: this.redo,

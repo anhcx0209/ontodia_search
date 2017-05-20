@@ -67,7 +67,7 @@ export class SparqlDataProvider implements DataProvider {
     }
 
     classTree(): Promise<ClassModel[]> {
-        const query = this.settings.defaultPrefix + this.settings.classTreeQuery;
+        const query = this.settings.defaultPrefix + this.settings.classTreeQuery;        
         return this.executeSparqlQuery<ClassBinding>(query).then(getClassTree);
     }
 
@@ -261,7 +261,7 @@ export class SparqlDataProvider implements DataProvider {
             }
             ${resolveTemplate(this.settings.filterElementInfoPattern, {dataLabelProperty: this.dataLabelProperty})}
         } ORDER BY DESC(?score)
-        `;
+        `;        
 
         return this.executeSparqlQuery<ElementBinding>(query).then(getFilteredData);
     };
@@ -308,8 +308,8 @@ export function executeSparqlQuery<Binding>(endpoint: string, query: string, met
             method: 'POST',
         });
     }
-    return internalQuery.then((response): Promise<SparqlResponse<Binding>> => {
-        if (response.ok) {
+    return internalQuery.then((response): Promise<SparqlResponse<Binding>> => {        
+        if (response.ok) {            
             return response.json();
         } else {
             const error = new Error(response.statusText);
