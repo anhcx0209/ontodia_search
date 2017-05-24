@@ -29,6 +29,23 @@ export function getClassTree(response: SparqlResponse<ClassBinding>): ClassModel
     return tree;
 }
 
+export function getInstances(response: SparqlResponse<ElementBinding>): Dictionary<ElementModel> {
+    const sInstances = response.results.bindings;
+    const instanceList: Dictionary<ElementModel> = {};
+
+    for (const sInst of sInstances) {        
+        if (sInst.inst.type === 'literal') {
+            continue;
+        }
+        if (!instanceList[sInst.inst.value]) {
+            instanceList[sInst.inst.value] = getElementInfo(sInst);
+        } else {
+            enrichElement(instanceList[sInst.inst.value], sInst);
+        }
+    };
+    return instanceList;
+}
+
 function createClassMap(sNodes: ClassBinding[]) : Dictionary<HierarchicalClassModel> {
     let treeNodes: Dictionary<HierarchicalClassModel> = {};
     for (const sNode of sNodes) {
@@ -206,10 +223,10 @@ export function getLinksTypesOf(response: SparqlResponse<LinkCountBinding>): Lin
 }
 
 export function getFilteredData(response: SparqlResponse<ElementBinding>): Dictionary<ElementModel> {
-    const sInstances = response.results.bindings;
+    const sInstances = response.results.bindings;    
     const instancesMap: Dictionary<ElementModel> = {};
 
-    for (const sInst of sInstances) {
+    for (const sInst of sInstances) {        
         if (sInst.inst.type === 'literal') {
             continue;
         }
@@ -334,16 +351,16 @@ export function getElementInfo(sInfo: ElementBinding): ElementModel {
         id: sInfo.inst.value,
         label: { values: [getLocalizedString(sInfo.label, sInfo.inst.value)] },
         types: (sInfo.class ? [ sInfo.class.value ] : []),
-        properties: {},
-    };
+        properties: {},        
+    };    
 
     if (sInfo.propType && sInfo.propType.value !== LABEL_URI) {
         elementInfo.properties[sInfo.propType.value] = {
             type: 'string', // sInst.propType.value,
             values: [getPropertyValue(sInfo.propValue)],
         };
-    }
-
+    }    
+    console.log(elementInfo);
     return elementInfo;
 }
 

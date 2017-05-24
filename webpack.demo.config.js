@@ -10,6 +10,7 @@ module.exports = {
     entry: {
         demo: path.join(__dirname, 'src', 'examples', 'demo.ts'),
         sparql: path.join(__dirname, 'src', 'examples', 'sparql.ts'),
+        stardog: path.join(__dirname, 'src', 'examples', 'stardog.ts'),
         dbpedia: path.join(__dirname, 'src', 'examples', 'dbpedia.ts'),
         sparqlNoStats: path.join(__dirname, 'src', 'examples', 'sparqlNoStats.ts'),
         sparqlConstruct: path.join(__dirname, 'src', 'examples', 'sparqlConstruct.ts'),
@@ -49,6 +50,12 @@ module.exports = {
             filename: 'sparql.html',
             title: 'Ontodia SparQL Demo',
             chunks: ['commons', 'sparql'],
+            template: path.join(__dirname, 'src', 'examples', 'template.ejs'),
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'stardog.html',
+            title: 'Stardog Demo',
+            chunks: ['commons', 'stardog'],
             template: path.join(__dirname, 'src', 'examples', 'template.ejs'),
         }),
         new HtmlWebpackPlugin({

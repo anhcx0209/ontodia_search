@@ -84,7 +84,8 @@ export class DemoDataProvider implements DataProvider {
             linkDirection: params.direction,
             limit: params.limit,
             offset: params.offset,
-            languageCode: ""});
+            languageCode: "",
+            searchType: '1'});
     }
 
     filter(params: FilterParams): Promise<Dictionary<ElementModel>> {

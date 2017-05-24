@@ -91,6 +91,12 @@ export interface DataProvider {
      * Implementation should implement all possible combinations
      */
     filter(params: FilterParams): Promise<Dictionary<ElementModel>>;
+
+    /**
+     * My all instances
+     * 
+     */    
+    // instances(): Promise<Dictionary<ElementModel>>;
 }
 
 export default DataProvider;
@@ -138,4 +144,9 @@ export interface FilterParams {
      * It's subject to be removed.
      */
     languageCode: string;
+
+    /**
+     * Search type
+     */    
+    searchType: string;
 }

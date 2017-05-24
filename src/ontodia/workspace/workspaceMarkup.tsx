@@ -133,7 +133,7 @@ export class WorkspaceMarkup extends React.Component<Props, void> {
             <div ref={e => this.element = e} className='ontodia'>
                 <div className='ontodia__header'>{this.props.toolbar}</div>                
                 <div className='ontodia__workspace'>
-                    {/*{!this.props.isViewOnly ? leftPanel : null}*/}
+                    {!this.props.isViewOnly ? leftPanel : null}
                     <div className='ontodia__main-panel'
                          data-position='left' data-step='3' data-intro-id='diagram-area' data-intro={INTRO_DIAGRAM}>
                         <PaperArea ref={el => this.paperArea = el}

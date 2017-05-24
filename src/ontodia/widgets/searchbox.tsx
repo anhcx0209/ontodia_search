@@ -16,7 +16,7 @@ export interface FullTextSearchProps {
     className?: string;
     view: DiagramView;
     textCriteria: TextCriteria;
-    onTextCriteriaChanged: (textCriteria: TextCriteria) => void;
+    onTextCriteriaChanged: (textCriteria: TextCriteria) => void;    
 }
 
 export interface TextCriteria {
@@ -25,9 +25,10 @@ export interface TextCriteria {
     readonly refElementId?: string;
     readonly refElementLinkId?: string;
     readonly linkDirection?: 'in' | 'out';
+    readonly searchType?: string;
 }
 
-export interface State {
+export interface State {    
     readonly inputText?: string;
     readonly quering?: boolean;
     readonly resultId?: number;
@@ -48,7 +49,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
         super(props);
         this.state = {
             selectedItems: {},
-            resultId: 0,
+            resultId: 0,            
         };
     }
 
@@ -72,6 +73,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
                 </div>
             </div>
             <div className={`${CLASS_NAME}__criteria`}>
+                
                 {this.renderCriteria()}
                 <div className={`${CLASS_NAME}__text-criteria input-group`}>
                     <input type='text' className='form-control' placeholder='Search for...'
@@ -87,6 +89,17 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
                             onClick={() => this.submitCriteriaUpdate()}>
                             <span className='fa fa-search' aria-hidden='true'></span>
                         </button>
+                    </span>                    
+                </div>
+
+                <div className={`${CLASS_NAME}__text-criteria input-group`}>
+                    <span className={`btn-group ${CLASS_NAME}__language-selector`}>
+                        <label><span>Type of search:</span></label>
+                        <select defaultValue='1' onChange={this.onChangeSearchType}>
+                            <option value='0'>Contain</option>
+                            <option value='1'>Fuzzy</option>
+                            <option value='2'>Boolean</option>         
+                        </select>
                     </span>
                 </div>
             </div>
@@ -102,9 +115,14 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
                         &nbsp;Show more
                     </button>
                 </div>
-            </div>
+            </div>            
         </div>;
     }
+
+    private onChangeSearchType = (event: React.SyntheticEvent<HTMLSelectElement>) => {
+        const value = event.currentTarget.value;
+        this.props.onTextCriteriaChanged({...this.props.textCriteria, searchType: value});
+    };
 
     private renderCriteria(): React.ReactElement<any> {
         const {textCriteria = {}, view} = this.props;
@@ -219,8 +237,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
         this.currentRequest = undefined;
     }
 
-    private queryItems(loadMoreItems: boolean) {
-        console.log(this.props.textCriteria);
+    private queryItems(loadMoreItems: boolean) {        
         let request: FilterParams;
         if (loadMoreItems) {
             if (!this.currentRequest) {
@@ -248,7 +265,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
             quering: true,
             error: undefined,
             moreItemsAvailable: false,
-        });
+        });    
 
         this.props.view.model.dataProvider.filter(request).then(elements => {
             if (this.currentRequest !== request) { return; }
@@ -301,6 +318,7 @@ function createRequest(criteria: TextCriteria, language: string): FilterParams {
         offset: 0,
         limit: 100,
         languageCode: language ? language : 'en',
+        searchType: criteria.searchType,
     };
 }
 

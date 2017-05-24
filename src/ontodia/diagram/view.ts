@@ -1,7 +1,7 @@
 import { hcl } from 'd3-color';
 import * as Backbone from 'backbone';
 import * as joint from 'jointjs';
-import { merge, cloneDeep } from 'lodash';
+import { merge, cloneDeep, each } from 'lodash';
 import { createElement } from 'react';
 import { render as reactDOMRender, unmountComponentAtNode } from 'react-dom';
 
@@ -77,7 +77,7 @@ export class DiagramView extends Backbone.Model {
 
     constructor(
         public readonly model: DiagramModel,
-        public readonly options: DiagramViewOptions = {}
+        public readonly options: DiagramViewOptions = { disableDefaultHalo: false, }
     ) {
         super();
         this.setLanguage('en');
@@ -120,10 +120,21 @@ export class DiagramView extends Backbone.Model {
                         let element = this.createElementAt(cl.id, {x: 0, y: 0});
                         elements.push(element);
                     });
+                    this.model.requestElementData(elements);
+                    this.model.requestLinksOfType();
                 }
             );
-            this.model.requestLinksOfType();
-            this.model.requestElementData(elements);
+            // elements = [];
+            // model.dataProvider.instances().then(
+            //     instances => {
+            //         each(instances, ints => {
+            //             let element = this.createElementAt(ints.id, {x: 0, y: 0});
+            //             elements.push(element);
+            //         });
+            //         this.model.requestElementData(elements);
+            //         this.model.requestLinksOfType();
+            //     }
+            // );
         });
     }
 
@@ -333,8 +344,7 @@ export class DiagramView extends Backbone.Model {
     }
 
     private createElementAt(elementId: string, position: { x: number; y: number; center?: boolean; }) {
-        const element = this.model.createElement(elementId);
-
+        const element = this.model.createElement(elementId);        
         let {x, y} = position;
         const size: { width: number; height: number; } = element.get('size');
         if (position.center) {

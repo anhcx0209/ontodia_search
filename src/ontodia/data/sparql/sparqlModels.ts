@@ -24,6 +24,7 @@ export interface ElementBinding {
     label?: RdfLiteral;
     propType?: RdfLiteral;
     propValue?: RdfLiteral;
+    score?: RdfLiteral;    
 }
 
 export interface ClassBinding {

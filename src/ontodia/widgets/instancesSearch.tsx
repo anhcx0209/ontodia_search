@@ -300,6 +300,7 @@ function createRequest(criteria: SearchCriteria, language: string): FilterParams
         offset: 0,
         limit: 100,
         languageCode: language ? language : 'en',
+        searchType: '0',
     };
 }
 

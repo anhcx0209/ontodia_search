@@ -250,7 +250,7 @@ export const OWLRDFSSettings: SparqlDataProviderSettings = {
     filterAdditionalRestriction: '',
 };
 
-const StardogSetting: Partial<SparqlDataProviderSettings> = {
+const StardogSettingOverride: Partial<SparqlDataProviderSettings> = {
     classTreeQuery: `
         SELECT DISTINCT ?class ?label ?parent 
         WHERE { 
@@ -258,7 +258,15 @@ const StardogSetting: Partial<SparqlDataProviderSettings> = {
             OPTIONAL { ?class rdfs:subClassOf ?parent } . 
             OPTIONAL { ?class rdfs:label ?label } 
         } ORDER BY ?class
-    `,
+    `,    
+    fullTextSearch: {
+        prefix: 'PREFIX stardog: <tag:stardog:api:>\n',
+        queryPattern: ` 
+              ?inst rdfs:label ?searchLabel.
+              (?searchLabel ?score) stardog:property:textMatch "\${text}~".                                          
+            `,
+        extractLabel: true,
+    },
 };
 
 const OWLStatsOverride: Partial<SparqlDataProviderSettings> = {
@@ -280,6 +288,7 @@ const OWLStatsOverride: Partial<SparqlDataProviderSettings> = {
     `,
 };
 export const OWLStatsSettings: SparqlDataProviderSettings = {...OWLRDFSSettings, ...OWLStatsOverride};
+export const StardogSettings: SparqlDataProviderSettings = {...OWLRDFSSettings, ...StardogSettingOverride};
 
 const DBPediaOverride: Partial<SparqlDataProviderSettings> = {
     fullTextSearch: {

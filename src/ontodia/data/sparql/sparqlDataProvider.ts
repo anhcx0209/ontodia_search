@@ -3,6 +3,7 @@ import * as N3 from 'n3';
 import { DataProvider, FilterParams } from '../provider';
 import { Dictionary, ClassModel, LinkType, ElementModel, LinkModel, LinkCount, PropertyModel } from '../model';
 import {
+    // getInstances,
     getClassTree,
     getClassInfo,
     getPropertyInfo,
@@ -18,7 +19,7 @@ import {
     ClassBinding, ElementBinding, LinkBinding, PropertyBinding,
     LinkCountBinding, LinkTypeBinding, ElementImageBinding, SparqlResponse, Triple, RdfNode,
 } from './sparqlModels';
-import { SparqlDataProviderSettings, OWLStatsSettings } from './sparqlDataProviderSettings';
+import { SparqlDataProviderSettings, OWLStatsSettings, StardogSettings } from './sparqlDataProviderSettings';
 
 export enum SparqlQueryMethod { GET = 1, POST }
 
@@ -57,7 +58,8 @@ export interface SparqlDataProviderOptions {
     labelProperty?: string;
 }
 
-export class SparqlDataProvider implements DataProvider {
+export class SparqlDataProvider implements DataProvider {    
+
     dataLabelProperty: string;
     constructor(
         private options: SparqlDataProviderOptions,
@@ -65,6 +67,28 @@ export class SparqlDataProvider implements DataProvider {
     ) {
         this.dataLabelProperty = options.labelProperty ? options.labelProperty : settings.dataLabelProperty;
     }
+
+    // instances(): Promise<Dictionary<ElementModel>> {
+    //     let params = {                        
+    //         offset: 0,
+    //         limit: 100,
+    //     };
+    //     if (params.limit === 0) { params.limit = 100; }
+        
+    //     let query = `${this.settings.defaultPrefix}            
+    //     SELECT ?inst ?class ?label ?score
+    //     WHERE {
+    //         {
+    //             SELECT DISTINCT ?inst WHERE {                    
+    //                 ${this.settings.filterAdditionalRestriction}                    
+    //             } LIMIT ${params.limit} OFFSET ${params.offset}
+    //         }
+    //         ${resolveTemplate(this.settings.filterElementInfoPattern, {dataLabelProperty: this.dataLabelProperty})}
+    //     }
+    //     `;        
+
+    //     return this.executeSparqlQuery<ElementBinding>(query).then(getFilteredData);
+    // }
 
     classTree(): Promise<ClassModel[]> {
         const query = this.settings.defaultPrefix + this.settings.classTreeQuery;        
@@ -210,11 +234,14 @@ export class SparqlDataProvider implements DataProvider {
             linkDirection: params.direction,
             limit: params.limit,
             offset: params.offset,
-            languageCode: ''});
+            languageCode: '',
+            searchType: '1'});
     }
 
     filter(params: FilterParams): Promise<Dictionary<ElementModel>> {
         if (params.limit === 0) { params.limit = 100; }
+
+        let stardogSetting: SparqlDataProviderSettings = StardogSettings;        
 
         if (!params.refElementId && params.refElementLinkId) {
             throw new Error(`Can't execute refElementLink filter without refElement`);
@@ -237,10 +264,17 @@ export class SparqlDataProvider implements DataProvider {
         let textSearchPart: string;
         if (params.text) {
             const text = params.text;
-            textSearchPart = resolveTemplate(
-                this.settings.fullTextSearch.queryPattern,
-                {text: text, dataLabelProperty: this.dataLabelProperty}
-            );
+            if (params.searchType == '0') {
+                textSearchPart = resolveTemplate(
+                    this.settings.fullTextSearch.queryPattern,
+                    {text: text, dataLabelProperty: this.dataLabelProperty}
+                );
+            } else {
+                textSearchPart = resolveTemplate(
+                    stardogSetting.fullTextSearch.queryPattern,
+                    {text: text, dataLabelProperty: this.dataLabelProperty}
+                );
+            }
         } else {
             textSearchPart = '';
         }
@@ -248,21 +282,20 @@ export class SparqlDataProvider implements DataProvider {
         let query = `${this.settings.defaultPrefix}
             ${this.settings.fullTextSearch.prefix}
             
-        SELECT ?inst ?class ?label
+        SELECT ?inst ?class ?label ?score
         WHERE {
             {
                 SELECT DISTINCT ?inst ?score WHERE {
                     ${elementTypePart}
                     ${refQueryPart}
-                    ${textSearchPart}
+                    ${textSearchPart}                 
                     ${this.settings.filterAdditionalRestriction}
                     ${this.settings.fullTextSearch.extractLabel ? sparqlExtractLabel('?inst', '?extractedLabel') : ''}
                 } ORDER BY DESC(?score) LIMIT ${params.limit} OFFSET ${params.offset}
             }
             ${resolveTemplate(this.settings.filterElementInfoPattern, {dataLabelProperty: this.dataLabelProperty})}
         } ORDER BY DESC(?score)
-        `;        
-
+        `;
         return this.executeSparqlQuery<ElementBinding>(query).then(getFilteredData);
     };
 
@@ -382,7 +415,7 @@ function queryInternal(params: {
     body: string,
     headers: any,
     method: string,
-}) {
+}) {    
     return fetch(params.url, {
         method: params.method,
         body: params.body,

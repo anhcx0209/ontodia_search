@@ -13,6 +13,7 @@ export interface ElementModel {
     label: { values: LocalizedString[] };
     image?: string;
     properties: { [id: string]: Property };
+    score?: string;
 }
 
 export interface LinkModel {
