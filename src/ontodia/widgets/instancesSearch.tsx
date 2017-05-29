@@ -299,8 +299,7 @@ function createRequest(criteria: SearchCriteria, language: string): FilterParams
         linkDirection: criteria.linkDirection,
         offset: 0,
         limit: 100,
-        languageCode: language ? language : 'en',
-        searchType: '0',
+        languageCode: language ? language : 'en',        
     };
 }
 

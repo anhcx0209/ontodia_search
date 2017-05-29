@@ -92,11 +92,12 @@ export interface DataProvider {
      */
     filter(params: FilterParams): Promise<Dictionary<ElementModel>>;
 
+
     /**
-     * My all instances
-     * 
-     */    
-    // instances(): Promise<Dictionary<ElementModel>>;
+     * Full-text search by Stardog
+     * Implementation should implement all possible combinations
+     */
+    filterStardog?(params: StardogFilterParams): Promise<Dictionary<ElementModel>>;
 }
 
 export default DataProvider;
@@ -143,10 +144,14 @@ export interface FilterParams {
      * It was introduced to order results by particular language when doing substring match with regexps.
      * It's subject to be removed.
      */
-    languageCode: string;
+    languageCode: string;    
+}
 
+export interface StardogFilterParams extends FilterParams {
     /**
      * Search type
-     */    
-    searchType: string;
+     */
+    searchType: StardogSearchType;
 }
+
+export enum StardogSearchType { EXACT = 0, CONTAIN, FUZZY, BOOLEAN }

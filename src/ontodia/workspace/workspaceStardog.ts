@@ -63,7 +63,7 @@ export class WorkspaceStardog extends Component<Props, State> {
             searchCriteria: this.state.criteria,
             textCriteria: this.state.textCriteria,
             onSearchCriteriaChanged: criteria => this.setState({criteria}),
-            onTextCriteriaChanged: textCriteria => this.setState({textCriteria}),            
+            onTextCriteriaChanged: textCriteria => this.setState({textCriteria}),
             toolbar: createElement<EditorToolbarProps>(EditorToolbar, {
                 onUndo: this.undo,
                 onRedo: this.redo,

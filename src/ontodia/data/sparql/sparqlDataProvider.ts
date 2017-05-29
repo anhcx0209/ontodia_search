@@ -1,6 +1,6 @@
 import 'whatwg-fetch';
 import * as N3 from 'n3';
-import { DataProvider, FilterParams } from '../provider';
+import { DataProvider, FilterParams, StardogFilterParams, StardogSearchType } from '../provider';
 import { Dictionary, ClassModel, LinkType, ElementModel, LinkModel, LinkCount, PropertyModel } from '../model';
 import {
     // getInstances,
@@ -235,10 +235,11 @@ export class SparqlDataProvider implements DataProvider {
             limit: params.limit,
             offset: params.offset,
             languageCode: '',
-            searchType: '1'});
+            });
     }
 
     filter(params: FilterParams): Promise<Dictionary<ElementModel>> {
+        
         if (params.limit === 0) { params.limit = 100; }
 
         let stardogSetting: SparqlDataProviderSettings = StardogSettings;        
@@ -259,22 +260,15 @@ export class SparqlDataProvider implements DataProvider {
             elementTypePart = resolveTemplate(this.settings.filterTypePattern, {elementTypeIri: elementTypeIri});
         } else {
             elementTypePart = '';
-        }
+        }        
 
         let textSearchPart: string;
         if (params.text) {
             const text = params.text;
-            if (params.searchType == '0') {
-                textSearchPart = resolveTemplate(
-                    this.settings.fullTextSearch.queryPattern,
-                    {text: text, dataLabelProperty: this.dataLabelProperty}
-                );
-            } else {
-                textSearchPart = resolveTemplate(
-                    stardogSetting.fullTextSearch.queryPattern,
-                    {text: text, dataLabelProperty: this.dataLabelProperty}
-                );
-            }
+            textSearchPart = resolveTemplate(
+                this.settings.fullTextSearch.queryPattern,
+                {text: text, dataLabelProperty: this.dataLabelProperty}
+            );
         } else {
             textSearchPart = '';
         }
@@ -299,6 +293,90 @@ export class SparqlDataProvider implements DataProvider {
         return this.executeSparqlQuery<ElementBinding>(query).then(getFilteredData);
     };
 
+    filterStardog(params: StardogFilterParams): Promise<Dictionary<ElementModel>> {
+        let stardogSetting: SparqlDataProviderSettings = StardogSettings;
+        
+        if (params.limit === 0) { params.limit = 100; }
+
+        if (!params.refElementId && params.refElementLinkId) {
+            throw new Error(`Can't execute refElementLink filter without refElement`);
+        }
+
+        let refQueryPart = createRefQueryPart({
+            elementId: params.refElementId,
+            linkId: params.refElementLinkId,
+            direction: params.linkDirection
+        });
+
+        let elementTypePart: string;
+        if (params.elementTypeId) {
+            const elementTypeIri = escapeIri(params.elementTypeId);
+            elementTypePart = resolveTemplate(this.settings.filterTypePattern, {elementTypeIri: elementTypeIri});
+        } else {
+            elementTypePart = '';
+        }        
+
+        let textSearchPart: string;
+        if (params.text) {
+            const text = preprocessing(params.text, params.searchType);
+            switch (params.searchType) {
+                case StardogSearchType.EXACT:
+                    textSearchPart = resolveTemplate(
+                        stardogSetting.extractSearchPattern,
+                        {text: text, dataLabelProperty: this.dataLabelProperty}
+                    );
+                    break;
+                case StardogSearchType.CONTAIN:
+                    textSearchPart = resolveTemplate(
+                        stardogSetting.containSearchPattern,
+                        {text: text, dataLabelProperty: this.dataLabelProperty}
+                    );
+                    break;
+                case StardogSearchType.FUZZY:
+                    textSearchPart = resolveTemplate(
+                        stardogSetting.fuzzySearchPattern,
+                        {text: text, dataLabelProperty: this.dataLabelProperty}
+                    );
+                    break;
+                case StardogSearchType.BOOLEAN:
+                    textSearchPart = resolveTemplate(
+                        stardogSetting.booleanSearchPattern,
+                        {text: text, dataLabelProperty: this.dataLabelProperty}
+                    );
+                    break;
+                default:
+                    textSearchPart = resolveTemplate(
+                        this.settings.fullTextSearch.queryPattern,
+                        {text: text, dataLabelProperty: this.dataLabelProperty}
+                    );
+                    break;
+            }
+        } else {
+            textSearchPart = '';
+        }
+
+        let query = `${this.settings.defaultPrefix}
+            ${this.settings.fullTextSearch.prefix}
+            ${stardogSetting.fullTextSearch.prefix}
+            
+        SELECT ?inst ?class ?label ?score
+        WHERE {
+            {
+                SELECT DISTINCT ?inst ?score WHERE {
+                    ${elementTypePart}
+                    ${refQueryPart}
+                    ${textSearchPart}                 
+                    ${this.settings.filterAdditionalRestriction}
+                    ${this.settings.fullTextSearch.extractLabel ? sparqlExtractLabel('?inst', '?extractedLabel') : ''}
+                } ORDER BY DESC(?score) LIMIT ${params.limit} OFFSET ${params.offset}
+            }
+            ${resolveTemplate(this.settings.filterElementInfoPattern, {dataLabelProperty: this.dataLabelProperty})}
+        } ORDER BY DESC(?score)
+        `;
+        console.log("Query: \n" + query);
+        return this.executeSparqlQuery<ElementBinding>(query).then(getFilteredData);
+    };
+
     executeSparqlQuery<Binding>(query: string) {
         const method = this.options.queryMethod ? this.options.queryMethod : SparqlQueryMethod.GET;
         return executeSparqlQuery<Binding>(this.options.endpointUrl, query, method);
@@ -317,6 +395,14 @@ function resolveTemplate(template: string, values: Dictionary<string>) {
         result = result.replace(new RegExp('\\${' + replaceKey + '}', 'g'), replaceValue);
     }
     return result;
+}
+
+function preprocessing(keyword: string, mode: StardogSearchType) : string {
+    // if (mode == StardogSearchType.CONTAIN) {
+    //     let escape = keyword.replace(/[\+\-\*\^]/, "\\$&");
+    //     console.log(escape);
+    // }
+    return keyword;
 }
 
 export function executeSparqlQuery<Binding>(endpoint: string, query: string, method: SparqlQueryMethod): Promise<SparqlResponse<Binding>> {
@@ -362,7 +448,7 @@ export function executeSparqlConstruct(endpoint: string, query: string, method: 
                 'Accept': 'text/turtle',
             },
             method: 'GET',
-        });
+        });   
     } else {
         internalQuery = queryInternal({
             url: endpoint,
@@ -399,7 +485,6 @@ export function executeSparqlConstruct(endpoint: string, query: string, method: 
         });
     });
 }
-
 
 
 function toRdfNode(entity: string): RdfNode {

@@ -67,6 +67,26 @@ export interface SparqlDataProviderSettings {
      * imposes additional filtering on elements within filter
      */
     filterAdditionalRestriction: string;
+
+    /**
+     * extract search query pattern
+     */
+    extractSearchPattern?: string;
+
+    /**
+     * contain search query pattern
+     */
+    containSearchPattern?: string;
+
+    /**
+     * fuzzy search query pattern
+     */
+    fuzzySearchPattern?: string;
+
+    /**
+     * boolean search query pattern
+     */
+    booleanSearchPattern?: string;     
 }
 
 /**
@@ -250,25 +270,6 @@ export const OWLRDFSSettings: SparqlDataProviderSettings = {
     filterAdditionalRestriction: '',
 };
 
-const StardogSettingOverride: Partial<SparqlDataProviderSettings> = {
-    classTreeQuery: `
-        SELECT DISTINCT ?class ?label ?parent 
-        WHERE { 
-            { ?class a owl:Class . } UNION { ?ind a ?class . } . 
-            OPTIONAL { ?class rdfs:subClassOf ?parent } . 
-            OPTIONAL { ?class rdfs:label ?label } 
-        } ORDER BY ?class
-    `,    
-    fullTextSearch: {
-        prefix: 'PREFIX stardog: <tag:stardog:api:>\n',
-        queryPattern: ` 
-              ?inst rdfs:label ?searchLabel.
-              (?searchLabel ?score) stardog:property:textMatch "\${text}~".                                          
-            `,
-        extractLabel: true,
-    },
-};
-
 const OWLStatsOverride: Partial<SparqlDataProviderSettings> = {
     classTreeQuery: `
         SELECT ?class ?instcount ?label ?parent
@@ -287,8 +288,42 @@ const OWLStatsOverride: Partial<SparqlDataProviderSettings> = {
         } ORDERBY ?class
     `,
 };
+
+const StardogOverride: Partial<SparqlDataProviderSettings> = {
+    fullTextSearch: {
+        prefix: 'PREFIX stardog: <tag:stardog:api:>\n',
+        queryPattern:
+        `?inst rdfs:label ?searchLabel.
+        (?searchLabel ?score) stardog:property:textMatch "\${text}".
+        `,
+        extractLabel: true,
+    },
+
+    extractSearchPattern:`
+        OPTIONAL {?inst \${dataLabelProperty} ?search1}
+        FILTER (COALESCE(str(?search1), str(?extractedLabel)) = "\${text}")
+        BIND(0 as ?score).
+    `,
+
+    containSearchPattern: `
+        OPTIONAL {?inst \${dataLabelProperty} ?search1}
+        FILTER regex(COALESCE(str(?search1), str(?extractedLabel)), "\${text}", "i")
+        BIND(0 as ?score)
+    `,
+
+    fuzzySearchPattern: `
+        ?inst rdfs:label ?searchLabel.
+        (?searchLabel ?score) stardog:property:textMatch "\${text}~".
+    `,
+
+    booleanSearchPattern: `
+        ?inst rdfs:label ?searchLabel.
+        (?searchLabel ?score) stardog:property:textMatch "\${text}".
+    `,
+}
+
 export const OWLStatsSettings: SparqlDataProviderSettings = {...OWLRDFSSettings, ...OWLStatsOverride};
-export const StardogSettings: SparqlDataProviderSettings = {...OWLRDFSSettings, ...StardogSettingOverride};
+export const StardogSettings: SparqlDataProviderSettings = {...OWLRDFSSettings, ...StardogOverride};
 
 const DBPediaOverride: Partial<SparqlDataProviderSettings> = {
     fullTextSearch: {

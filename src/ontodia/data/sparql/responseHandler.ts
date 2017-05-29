@@ -223,10 +223,10 @@ export function getLinksTypesOf(response: SparqlResponse<LinkCountBinding>): Lin
 }
 
 export function getFilteredData(response: SparqlResponse<ElementBinding>): Dictionary<ElementModel> {
-    const sInstances = response.results.bindings;    
+    const sInstances = response.results.bindings;
     const instancesMap: Dictionary<ElementModel> = {};
 
-    for (const sInst of sInstances) {        
+    for (const sInst of sInstances) {
         if (sInst.inst.type === 'literal') {
             continue;
         }
@@ -360,7 +360,6 @@ export function getElementInfo(sInfo: ElementBinding): ElementModel {
             values: [getPropertyValue(sInfo.propValue)],
         };
     }    
-    console.log(elementInfo);
     return elementInfo;
 }
 

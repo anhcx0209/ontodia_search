@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as Backbone from 'backbone';
 
 import { Dictionary, ElementModel, LocalizedString } from '../data/model';
-import { FilterParams } from '../data/provider';
+import { StardogFilterParams } from '../data/provider';
 
 import { uri2name } from '../diagram/model';
 import { DiagramView } from '../diagram/view';
@@ -43,7 +43,7 @@ const CLASS_NAME = 'ontodia-instances-search';
 export class FullTextSearch extends React.Component<FullTextSearchProps, State> {
     private readonly listener = new Backbone.Model();
 
-    private currentRequest: FilterParams;
+    private currentRequest: StardogFilterParams;
 
     constructor(props: FullTextSearchProps) {
         super(props);
@@ -95,10 +95,11 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
                 <div className={`${CLASS_NAME}__text-criteria input-group`}>
                     <span className={`btn-group ${CLASS_NAME}__language-selector`}>
                         <label><span>Type of search:</span></label>
-                        <select defaultValue='1' onChange={this.onChangeSearchType}>
-                            <option value='0'>Contain</option>
-                            <option value='1'>Fuzzy</option>
-                            <option value='2'>Boolean</option>         
+                        <select defaultValue='0' onChange={this.onChangeSearchType}>
+                            <option value='0'>Exact Match</option>
+                            <option value='1'>Contain</option>
+                            <option value='2'>Fuzzy</option>         
+                            <option value='3'>Boolean</option>
                         </select>
                     </span>
                 </div>
@@ -227,7 +228,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
         const languageChanged = this.currentRequest
             ? this.currentRequest.languageCode !== nextProps.view.getLanguage() : false;
 
-        if (this.props.textCriteria !== nextProps.textCriteria || languageChanged) {
+        if (this.props.textCriteria !== nextProps.textCriteria || languageChanged) {            
             this.setState({inputText: undefined}, () => this.queryItems(false));
         }
     }
@@ -237,8 +238,8 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
         this.currentRequest = undefined;
     }
 
-    private queryItems(loadMoreItems: boolean) {        
-        let request: FilterParams;
+    private queryItems(loadMoreItems: boolean) {
+        let request: StardogFilterParams;
         if (loadMoreItems) {
             if (!this.currentRequest) {
                 throw new Error('Cannot request more items without initial request.');
@@ -265,9 +266,9 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
             quering: true,
             error: undefined,
             moreItemsAvailable: false,
-        });    
+        });
 
-        this.props.view.model.dataProvider.filter(request).then(elements => {
+        this.props.view.model.dataProvider.filterStardog(request).then(elements => {
             if (this.currentRequest !== request) { return; }
             this.processFilterData(elements);
         }).catch(error => {
@@ -308,7 +309,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
     }
 }
 
-function createRequest(criteria: TextCriteria, language: string): FilterParams {
+function createRequest(criteria: TextCriteria, language: string): StardogFilterParams {
     return {
         text: criteria.text,
         elementTypeId: criteria.elementTypeId,
@@ -318,7 +319,7 @@ function createRequest(criteria: TextCriteria, language: string): FilterParams {
         offset: 0,
         limit: 100,
         languageCode: language ? language : 'en',
-        searchType: criteria.searchType,
+        searchType: criteria.searchType ? +criteria.searchType : 0,
     };
 }
 

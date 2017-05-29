@@ -11,6 +11,7 @@ module.exports = {
         demo: path.join(__dirname, 'src', 'examples', 'demo.ts'),
         sparql: path.join(__dirname, 'src', 'examples', 'sparql.ts'),
         stardog: path.join(__dirname, 'src', 'examples', 'stardog.ts'),
+        auth: path.join(__dirname, 'src', 'examples', 'auth.ts'),
         dbpedia: path.join(__dirname, 'src', 'examples', 'dbpedia.ts'),
         sparqlNoStats: path.join(__dirname, 'src', 'examples', 'sparqlNoStats.ts'),
         sparqlConstruct: path.join(__dirname, 'src', 'examples', 'sparqlConstruct.ts'),
@@ -51,6 +52,12 @@ module.exports = {
             title: 'Ontodia SparQL Demo',
             chunks: ['commons', 'sparql'],
             template: path.join(__dirname, 'src', 'examples', 'template.ejs'),
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'auth.html',
+            title: 'Auth',
+            chunks: ['commons', 'auth'],
+            template: path.join(__dirname, 'src', 'examples', 'authTemplate.ejs'),
         }),
         new HtmlWebpackPlugin({
             filename: 'stardog.html',
@@ -100,7 +107,7 @@ module.exports = {
             chunks: ['commons', 'wikidataGraph', ],
             template: path.join(__dirname, 'src', 'examples', 'template.ejs'),
         }),
-        new CommonsChunkPlugin('commons', 'commons.chunk.js'),
+        new CommonsChunkPlugin('commons', 'commons.chunk.js'),        
     ],
     output: {
         path: path.join(__dirname, 'dist', 'examples'),

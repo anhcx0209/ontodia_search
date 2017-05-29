@@ -10,7 +10,7 @@ require('jointjs/css/themes/default.css');
 
 function onWorkspaceMounted(workspace: WorkspaceStardog) {
     if (!workspace) { return; }
-
+    
     const model = workspace.getModel();
     model.graph.on('action:iriClick', (iri: string) => {
         window.open(iri);
@@ -18,6 +18,7 @@ function onWorkspaceMounted(workspace: WorkspaceStardog) {
     });
 
     const layoutData = tryLoadLayoutFromLocalStorage();
+    
     model.importLayout({
         layoutData,
         validateLinks: true,
@@ -42,3 +43,5 @@ const props: WorkspaceStardogProps & ClassAttributes<WorkspaceStardog> = {
 };
 
 onPageLoad(container => ReactDOM.render(createElement(WorkspaceStardog, props), container));
+
+$('#exampleModal').modal('toggle');
