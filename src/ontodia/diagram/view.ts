@@ -1,3 +1,4 @@
+///<reference path="model.ts"/>
 import { hcl } from 'd3-color';
 import * as Backbone from 'backbone';
 import * as joint from 'jointjs';
@@ -32,6 +33,7 @@ import { Element, FatClassModel, linkMarkerKey } from './elements';
 import { LinkView } from './linkView';
 import { SeparatedElementView } from './separatedElementView';
 import { ElementLayer } from './elementLayer';
+import forEach = require("lodash/forEach");
 
 export interface DiagramViewOptions {
     typeStyleResolvers?: TypeStyleResolver[];
@@ -112,29 +114,20 @@ export class DiagramView extends Backbone.Model {
         });
         this.listenTo(model, 'state:dataLoaded', () => {
             this.model.resetHistory();
-            // Add all classes to view.
-            let elements:  Element[] = [];
-            model.dataProvider.classTree().then(
-                classes => {
-                    classes.forEach(cl => {
-                        let element = this.createElementAt(cl.id, {x: 0, y: 0});
-                        elements.push(element);
-                    });
-                    this.model.requestElementData(elements);
-                    this.model.requestLinksOfType();
+            model.dataProvider.concepts().then(
+                concepts => {
+                    for (let key in concepts) {
+                        let element = this.createElementAt(key, { x: 0, y: 0, center: true});
+                        let elementsToSelect = [element];
+                        this.model.requestElementData(elementsToSelect).catch(function (e){
+                            console.log(e);
+                        });
+                        this.model.requestLinksOfType().catch(function (e){
+                            console.log(e);
+                        });;
+                    }
                 }
             );
-            // elements = [];
-            // model.dataProvider.instances().then(
-            //     instances => {
-            //         each(instances, ints => {
-            //             let element = this.createElementAt(ints.id, {x: 0, y: 0});
-            //             elements.push(element);
-            //         });
-            //         this.model.requestElementData(elements);
-            //         this.model.requestLinksOfType();
-            //     }
-            // );
         });
     }
 
@@ -319,6 +312,7 @@ export class DiagramView extends Backbone.Model {
                 elementIds = [uri];
             }
         }
+
         if (!elementIds || elementIds.length === 0) { return; }
 
         this.model.initBatchCommand();
@@ -344,7 +338,7 @@ export class DiagramView extends Backbone.Model {
     }
 
     private createElementAt(elementId: string, position: { x: number; y: number; center?: boolean; }) {
-        const element = this.model.createElement(elementId);        
+        const element = this.model.createElement(elementId);
         let {x, y} = position;
         const size: { width: number; height: number; } = element.get('size');
         if (position.center) {

@@ -33,7 +33,7 @@ export interface Props {
 
 export interface State {
     readonly criteria?: SearchCriteria;
-    readonly textCriteria?: TextCriteria;
+    //readonly textCriteria?: TextCriteria;
 }
 
 export class Workspace extends Component<Props, State> {
@@ -61,9 +61,9 @@ export class Workspace extends Component<Props, State> {
             isViewOnly: this.props.isViewOnly,
             view: this.diagram,
             searchCriteria: this.state.criteria,
-            textCriteria: this.state.textCriteria,
+            //textCriteria: this.state.textCriteria,
             onSearchCriteriaChanged: criteria => this.setState({criteria}),
-            onTextCriteriaChanged: textCriteria => this.setState({textCriteria}),            
+            // onTextCriteriaChanged: textCriteria => this.testState(textCriteria),
             toolbar: createElement<EditorToolbarProps>(EditorToolbar, {
                 onUndo: this.undo,
                 onRedo: this.redo,
@@ -86,6 +86,11 @@ export class Workspace extends Component<Props, State> {
                 isDiagramSaved: this.props.isDiagramSaved,
             }),
         } as MarkupProps & React.ClassAttributes<WorkspaceMarkup>);
+    }
+
+    testState(textCriteria : TextCriteria) {
+        console.log("Workspace set state");
+        //this.setState({textCriteria});
     }
 
     componentDidMount() {

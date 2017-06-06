@@ -16,14 +16,14 @@ export interface FullTextSearchProps {
     className?: string;
     view: DiagramView;
     textCriteria: TextCriteria;
-    onTextCriteriaChanged: (textCriteria: TextCriteria) => void;    
+    onTextCriteriaChanged: (textCriteria: TextCriteria) => void;
 }
 
 export interface TextCriteria {
     readonly text?: string;
-    readonly elementTypeId?: string;
-    readonly refElementId?: string;
-    readonly refElementLinkId?: string;
+    // readonly elementTypeId?: string;
+    // readonly refElementId?: string;
+    // readonly refElementLinkId?: string;
     readonly linkDirection?: 'in' | 'out';
     readonly searchType?: string;
 }
@@ -74,7 +74,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
             </div>
             <div className={`${CLASS_NAME}__criteria`}>
                 
-                {this.renderCriteria()}
+                {/*{this.renderCriteria()}*/}
                 <div className={`${CLASS_NAME}__text-criteria input-group`}>
                     <input type='text' className='form-control' placeholder='Search for...'
                         value={searchTerm || ''}
@@ -125,7 +125,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
         this.props.onTextCriteriaChanged({...this.props.textCriteria, searchType: value});
     };
 
-    private renderCriteria(): React.ReactElement<any> {
+    /*private renderCriteria(): React.ReactElement<any> {
         const {textCriteria = {}, view} = this.props;
         const criterions: React.ReactElement<any>[] = [];
 
@@ -167,7 +167,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
         }
 
         return <div className={`${CLASS_NAME}__criterions`}>{criterions}</div>;
-    }
+    }*/
 
     private renderRemoveCriterionButtons(onClick: () => void) {
         return <div className={`${CLASS_NAME}__criterion-remove btn-group btn-group-xs`}>
@@ -210,7 +210,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
         this.props.onTextCriteriaChanged({...this.props.textCriteria, text});
     }
 
-    componentDidMount() {
+    componentDidMount() {        
         this.listener.listenTo(this.props.view, 'change:language', () => this.forceUpdate());
         this.listener.listenTo(this.props.view.model.cells, 'add remove reset', () => {
             const selectedItems: Dictionary<boolean> = {...this.state.selectedItems};
@@ -227,7 +227,6 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
     componentWillReceiveProps(nextProps: FullTextSearchProps) {
         const languageChanged = this.currentRequest
             ? this.currentRequest.languageCode !== nextProps.view.getLanguage() : false;
-
         if (this.props.textCriteria !== nextProps.textCriteria || languageChanged) {            
             this.setState({inputText: undefined}, () => this.queryItems(false));
         }
@@ -238,7 +237,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
         this.currentRequest = undefined;
     }
 
-    private queryItems(loadMoreItems: boolean) {
+    private queryItems(loadMoreItems: boolean) {        
         let request: StardogFilterParams;
         if (loadMoreItems) {
             if (!this.currentRequest) {
@@ -247,8 +246,8 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
             const {offset, limit} = this.currentRequest;
             request = {...this.currentRequest, offset: offset + limit};
         } else {
-            request = createRequest(this.props.textCriteria, this.props.view.getLanguage());            
-        }
+            request = createRequest(this.props.textCriteria, this.props.view.getLanguage());
+        }  
 
         if (!(request.text || request.elementTypeId || request.refElementId || request.refElementLinkId)) {
             this.setState({
@@ -269,8 +268,8 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
         });
 
         this.props.view.model.dataProvider.filterStardog(request).then(elements => {
-            if (this.currentRequest !== request) { return; }
             this.processFilterData(elements);
+            if (this.currentRequest !== request) { return; }
         }).catch(error => {
             if (this.currentRequest !== request) { return; }
             console.error(error);
@@ -311,10 +310,7 @@ export class FullTextSearch extends React.Component<FullTextSearchProps, State> 
 
 function createRequest(criteria: TextCriteria, language: string): StardogFilterParams {
     return {
-        text: criteria.text,
-        elementTypeId: criteria.elementTypeId,
-        refElementId: criteria.refElementId,
-        refElementLinkId: criteria.refElementLinkId,
+        text: criteria.text,        
         linkDirection: criteria.linkDirection,
         offset: 0,
         limit: 100,

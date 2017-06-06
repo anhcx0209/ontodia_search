@@ -98,6 +98,8 @@ export interface DataProvider {
      * Implementation should implement all possible combinations
      */
     filterStardog?(params: StardogFilterParams): Promise<Dictionary<ElementModel>>;
+
+    concepts?(): Promise<Dictionary<ElementModel>>;
 }
 
 export default DataProvider;

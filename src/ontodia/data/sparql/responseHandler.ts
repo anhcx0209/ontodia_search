@@ -29,23 +29,6 @@ export function getClassTree(response: SparqlResponse<ClassBinding>): ClassModel
     return tree;
 }
 
-export function getInstances(response: SparqlResponse<ElementBinding>): Dictionary<ElementModel> {
-    const sInstances = response.results.bindings;
-    const instanceList: Dictionary<ElementModel> = {};
-
-    for (const sInst of sInstances) {        
-        if (sInst.inst.type === 'literal') {
-            continue;
-        }
-        if (!instanceList[sInst.inst.value]) {
-            instanceList[sInst.inst.value] = getElementInfo(sInst);
-        } else {
-            enrichElement(instanceList[sInst.inst.value], sInst);
-        }
-    };
-    return instanceList;
-}
-
 function createClassMap(sNodes: ClassBinding[]) : Dictionary<HierarchicalClassModel> {
     let treeNodes: Dictionary<HierarchicalClassModel> = {};
     for (const sNode of sNodes) {
@@ -227,6 +210,7 @@ export function getFilteredData(response: SparqlResponse<ElementBinding>): Dicti
     const instancesMap: Dictionary<ElementModel> = {};
 
     for (const sInst of sInstances) {
+
         if (sInst.inst.type === 'literal') {
             continue;
         }

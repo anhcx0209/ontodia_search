@@ -68,27 +68,21 @@ export class SparqlDataProvider implements DataProvider {
         this.dataLabelProperty = options.labelProperty ? options.labelProperty : settings.dataLabelProperty;
     }
 
-    // instances(): Promise<Dictionary<ElementModel>> {
-    //     let params = {                        
-    //         offset: 0,
-    //         limit: 100,
-    //     };
-    //     if (params.limit === 0) { params.limit = 100; }
-        
-    //     let query = `${this.settings.defaultPrefix}            
-    //     SELECT ?inst ?class ?label ?score
-    //     WHERE {
-    //         {
-    //             SELECT DISTINCT ?inst WHERE {                    
-    //                 ${this.settings.filterAdditionalRestriction}                    
-    //             } LIMIT ${params.limit} OFFSET ${params.offset}
-    //         }
-    //         ${resolveTemplate(this.settings.filterElementInfoPattern, {dataLabelProperty: this.dataLabelProperty})}
-    //     }
-    //     `;        
+    concepts(): Promise<Dictionary<ElementModel>> {
+        const query = this.settings.defaultPrefix + `
+            SELECT ?inst ?class ?label 
+            WHERE
+            {
+                ?inst rdf:type <http://www.semanticweb.org/elenasarkisova/ontologies/2016/1/untitled-ontology-3/Concept> . 
+                OPTIONAL {
+                    ?inst rdf:type ?class.
+                    ?inst rdfs:label ?label.
+                }
+            }
+        `;
 
-    //     return this.executeSparqlQuery<ElementBinding>(query).then(getFilteredData);
-    // }
+        return this.executeSparqlQuery<ElementBinding>(query).then(getFilteredData);
+    }
 
     classTree(): Promise<ClassModel[]> {
         const query = this.settings.defaultPrefix + this.settings.classTreeQuery;        
@@ -242,8 +236,6 @@ export class SparqlDataProvider implements DataProvider {
         
         if (params.limit === 0) { params.limit = 100; }
 
-        let stardogSetting: SparqlDataProviderSettings = StardogSettings;        
-
         if (!params.refElementId && params.refElementLinkId) {
             throw new Error(`Can't execute refElementLink filter without refElement`);
         }
@@ -290,32 +282,19 @@ export class SparqlDataProvider implements DataProvider {
             ${resolveTemplate(this.settings.filterElementInfoPattern, {dataLabelProperty: this.dataLabelProperty})}
         } ORDER BY DESC(?score)
         `;
+
         return this.executeSparqlQuery<ElementBinding>(query).then(getFilteredData);
     };
 
     filterStardog(params: StardogFilterParams): Promise<Dictionary<ElementModel>> {
         let stardogSetting: SparqlDataProviderSettings = StardogSettings;
-        
+        // Set param limit    
         if (params.limit === 0) { params.limit = 100; }
 
         if (!params.refElementId && params.refElementLinkId) {
             throw new Error(`Can't execute refElementLink filter without refElement`);
         }
-
-        let refQueryPart = createRefQueryPart({
-            elementId: params.refElementId,
-            linkId: params.refElementLinkId,
-            direction: params.linkDirection
-        });
-
-        let elementTypePart: string;
-        if (params.elementTypeId) {
-            const elementTypeIri = escapeIri(params.elementTypeId);
-            elementTypePart = resolveTemplate(this.settings.filterTypePattern, {elementTypeIri: elementTypeIri});
-        } else {
-            elementTypePart = '';
-        }        
-
+        // Build query search text part
         let textSearchPart: string;
         if (params.text) {
             const text = preprocessing(params.text, params.searchType);
@@ -363,8 +342,6 @@ export class SparqlDataProvider implements DataProvider {
         WHERE {
             {
                 SELECT DISTINCT ?inst ?score WHERE {
-                    ${elementTypePart}
-                    ${refQueryPart}
                     ${textSearchPart}                 
                     ${this.settings.filterAdditionalRestriction}
                     ${this.settings.fullTextSearch.extractLabel ? sparqlExtractLabel('?inst', '?extractedLabel') : ''}
@@ -373,7 +350,7 @@ export class SparqlDataProvider implements DataProvider {
             ${resolveTemplate(this.settings.filterElementInfoPattern, {dataLabelProperty: this.dataLabelProperty})}
         } ORDER BY DESC(?score)
         `;
-        console.log("Query: \n" + query);
+        
         return this.executeSparqlQuery<ElementBinding>(query).then(getFilteredData);
     };
 
